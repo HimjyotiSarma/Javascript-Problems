@@ -97,12 +97,30 @@ class Tree {
       return root.data
     }
   }
-  levelOrder() {
+
+  #findNode(root, value) {
+    if (root == null) {
+      return root
+    }
+    if (value < root.data) {
+      return this.#findNode(root.left, value)
+    } else if (value > root.data) {
+      return this.#findNode(root.right, value)
+    } else {
+      return root
+    }
+  }
+  levelOrder(callback) {
     let queue = new Queue()
+    let result = []
     queue.enqueue(this.root)
     while (!queue.isEmpty()) {
       const tempNode = queue.dequeue()
-      console.log(tempNode.data + ' ')
+      if (callback) {
+        callback(tempNode)
+      } else {
+        result.push(tempNode.data)
+      }
       if (tempNode.left != null) {
         queue.enqueue(tempNode.left)
       }
@@ -110,6 +128,143 @@ class Tree {
         queue.enqueue(tempNode.right)
       }
     }
+    if (!callback) {
+      return result
+    }
+  }
+  levelOrderRecursive(callback) {
+    let queue = new Queue()
+    let result = []
+    queue.enqueue(this.root)
+    const traverse = () => {
+      if (queue.length === 0) {
+        return
+      }
+      let tempNode = queue.dequeue()
+      if (callback) {
+        callback(tempNode)
+      } else {
+        result.push(tempNode)
+      }
+      if (tempNode.left !== null) {
+        queue.enqueue(tempNode.left)
+      }
+      if (tempNode.right != null) {
+        queue.enqueue(tempNode.right)
+      }
+      traverse()
+      if (!callback) {
+        return result
+      }
+    }
+    traverse()
+  }
+  inOrder(callback) {
+    return this.#inOrderTraversal(this.root, callback)
+  }
+  #inOrderTraversal(node, callback = null) {
+    let result = []
+    if (node == null) {
+      return result
+    }
+    result = result.concat(this.#inOrderTraversal(node.left, callback))
+    if (callback) {
+      callback(node.data)
+    } else {
+      result.push(node.data)
+    }
+
+    result = result.concat(this.#inOrderTraversal(node.right, callback))
+    return result
+  }
+  preOrder(callback) {
+    return this.#preOrderTraversal(this.root, callback)
+  }
+  #preOrderTraversal(node, callback = null) {
+    let result = []
+    if (node == null) {
+      return result
+    }
+    if (callback) {
+      callback(node)
+    } else {
+      result.push(node.data)
+    }
+
+    result = result.concat(this.#preOrderTraversal(node.left, callback))
+    result = result.concat(this.#preOrderTraversal(node.right, callback))
+
+    return result
+  }
+  postOrder(callback) {
+    return this.#postOrderTraversal(this.root, callback)
+  }
+  #postOrderTraversal(node, callback = null) {
+    let result = []
+    if (node == null) {
+      return result
+    }
+    result = result.concat(this.#postOrderTraversal(node.left, callback))
+    result = result.concat(this.#postOrderTraversal(node.right, callback))
+    if (callback) {
+      callback(node)
+    } else {
+      result.push(node.data)
+    }
+
+    return result
+  }
+  depth(value) {
+    return this.#findDepth(this.root, value, 0)
+  }
+  #findDepth(root, value, dist) {
+    if (root === null) {
+      return -1
+    }
+    if (value < root.data) {
+      return this.#findDepth(root.left, value, dist + 1)
+    }
+    if (value > root.data) {
+      return this.#findDepth(root.right, value, dist + 1)
+    } else {
+      return dist
+    }
+  }
+  height(value) {
+    let node = this.#findNode(this.root, value)
+    return node ? this.#findHeight(node, value) : -1
+  }
+  #findHeight(root, value) {
+    if (root == null) {
+      return -1
+    }
+
+    let leftHeight = this.#findHeight(root.left, value)
+    let rightHeight = this.#findHeight(root.right, value)
+
+    return Math.max(leftHeight, rightHeight) + 1
+  }
+  isBalanced() {
+    return this.#checkIsBalanced(this.root) !== -1
+  }
+  #checkIsBalanced(root) {
+    if (root == null) {
+      return 0
+    }
+    let leftHeight = this.#checkIsBalanced(root.left)
+    if (leftHeight == -1) return -1
+    let rightHeight = this.#checkIsBalanced(root.right)
+    if (rightHeight == -1) return -1
+
+    if (Math.abs(leftHeight - rightHeight) > 1) {
+      return -1
+    }
+    return Math.max(leftHeight, rightHeight) + 1
+  }
+  reBalance() {
+    let nodes = this.inOrder()
+    this.root = this.buildTree(nodes)
+    return this.root
   }
   prettyPrint(node = this.root, prefix = '', isLeft = true) {
     if (node === null) {
